@@ -19,6 +19,8 @@ class Auth {
     this.user,
   });
 
+  factory Auth.unauth() => Auth();
+
   Auth copyWith({
     String jwt,
     User user,
