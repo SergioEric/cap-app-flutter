@@ -9,6 +9,7 @@ import 'package:lol_colors_flutter/lol_colors_flutter.dart';
 // import 'helpers/helpers.dart';
 import 'global.providers.dart';
 import 'models/auth/auth.model.dart';
+import 'models/person/person.model.dart';
 import 'models/role/role.model.dart';
 import 'models/user/user.model.dart';
 import 'pages/home_page/home.page.dart';
@@ -24,6 +25,7 @@ void main() async {
   Hive.registerAdapter(AuthAdapter());
   Hive.registerAdapter(RoleAdapter());
   Hive.registerAdapter(UserAdapter());
+  Hive.registerAdapter(PersonAdapter());
 
   runApp(
     ProviderScope(

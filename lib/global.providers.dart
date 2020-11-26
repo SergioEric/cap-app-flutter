@@ -4,7 +4,7 @@ import 'package:hive/hive.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'models/auth/auth.model.dart';
-import 'providers/login_provider/login.provider.dart';
+import 'providers/login_repository/login.repository.dart';
 
 final client = Provider((_) => Dio());
 
@@ -28,3 +28,9 @@ final loginRepository = Provider<LoginRepository>(
     // read: ref.read,
   ),
 );
+
+final userInfoProvider = Provider.autoDispose<Auth>((_) {
+  final box = Hive.box<Auth>("auth");
+
+  return box.get("session");
+});

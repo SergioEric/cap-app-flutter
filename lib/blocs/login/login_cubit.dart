@@ -1,7 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:cap_sahagun/models/auth/auth.model.dart';
-import 'package:cap_sahagun/models/exceptions/exception.model.dart';
-import 'package:cap_sahagun/providers/login_provider/login.provider.dart';
+import 'package:cap_sahagun/providers/login_repository/login.repository.dart';
 import 'package:equatable/equatable.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:meta/meta.dart';

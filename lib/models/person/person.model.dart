@@ -1,10 +1,24 @@
 import 'dart:convert';
 
-class Person {
+import 'package:hive/hive.dart';
+
+part 'person.model.g.dart';
+
+@HiveType(typeId: 5)
+class Person extends HiveObject {
+  @HiveField(0)
   final int id;
+
+  @HiveField(1)
   final String nombre;
+
+  @HiveField(2)
   final int edad;
+
+  @HiveField(3)
   final bool sexo;
+
+  @HiveField(4)
   final String identificacion;
 
   Person({

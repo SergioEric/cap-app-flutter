@@ -1,5 +1,6 @@
 // import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:cap_sahagun/models/exceptions/exception.model.dart';
+import 'package:cap_sahagun/models/person/person.model.dart';
 import 'package:dio/dio.dart';
 import 'package:hive/hive.dart';
 import 'package:meta/meta.dart';
@@ -60,8 +61,11 @@ class LoginRepository {
   }
 
   Future<void> logOut() async {
-    var box = Hive.box<Auth>("auth");
+    var authBox = Hive.box<Auth>("auth");
 
-    await box.clear();
+    var personBox = await Hive.openBox<Person>("person");
+
+    await personBox.clear();
+    await authBox.clear();
   }
 }

@@ -21,12 +21,6 @@ final logOutProvider = FutureProvider<void>((ref) async {
   ref.watch(authProvider).state = false;
 });
 
-final userInfoProvider = Provider.autoDispose<Auth>((_) {
-  final box = Hive.box<Auth>("auth");
-
-  return box.get("session");
-});
-
 final selectedIndex = StateProvider<int>((_) => 0);
 
 final userInformation = FutureProvider.family
@@ -45,6 +39,10 @@ final userInformation = FutureProvider.family
   // print(response);
   var person = Person.fromMap(response.data[0]);
 
+  if (person != null) {
+    var box = await Hive.openBox<Person>("person");
+    box.put("person", person);
+  }
   // print(person);
 
   return person;
