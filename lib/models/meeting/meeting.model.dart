@@ -5,12 +5,13 @@ import '../person/person.model.dart';
 
 class Meeting {
   Meeting(this.id, this.horario, this.tutor, this.url, this.materiales,
-      this.estudiantes);
+      this.estudiantes, this.dias);
 
   final int id;
   final String horario;
   final Person tutor;
   final String url;
+  final String dias;
   final List<Materials> materiales;
 
   final List<Person> estudiantes;
@@ -23,6 +24,7 @@ class Meeting {
       'Url': url,
       'Materiales': materiales?.map((x) => x?.toMap())?.toList(),
       'Estudiantes': estudiantes?.map((x) => x?.toMap())?.toList(),
+      'dias': dias,
     };
   }
 
@@ -36,6 +38,7 @@ class Meeting {
       map['Url'],
       List<Materials>.from(map['Materiales']?.map((x) => Materials.fromMap(x))),
       List<Person>.from(map['Estudiantes']?.map((x) => Person.fromMap(x))),
+      map['dias'],
     );
   }
 
@@ -46,6 +49,6 @@ class Meeting {
 
   @override
   String toString() {
-    return 'Meeting(id: $id, horario: $horario, tutor: $tutor, url: $url, materiales: $materiales, estudiantes: $estudiantes)';
+    return 'Meeting(id: $id, horario: $horario, tutor: $tutor, url: $url, dias:$dias, materiales: $materiales, estudiantes: $estudiantes)';
   }
 }

@@ -2,7 +2,7 @@ import 'package:cap_sahagun/models/auth/auth.model.dart';
 import 'package:cap_sahagun/models/family_parameters/rol.parameter.dart';
 import 'package:cap_sahagun/models/person/person.model.dart';
 import 'package:cap_sahagun/models/role/role.model.dart';
-import 'package:cap_sahagun/pages/material_page/material.page.dart';
+import 'package:cap_sahagun/pages/home_page/home.tutor.widget.dart';
 import 'package:cap_sahagun/providers/base.url.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +13,8 @@ import '../../global.providers.dart';
 import '../../providers/new.context.dart';
 
 import 'package:flutter_hooks/flutter_hooks.dart';
+
+import 'home.student.widget.dart';
 
 final logOutProvider = FutureProvider<void>((ref) async {
   final repo = ref.watch(loginRepository);
@@ -53,13 +55,23 @@ class HomePage extends StatelessWidget {
     return MaterialPageRoute<void>(builder: (_) => HomePage());
   }
 
-  static const List<Widget> _widgetOptions = <Widget>[
+  static const List<Widget> _widgetStudentOptions = <Widget>[
     HomeStudent(),
     Text(
-      'Index 1: Business',
+      'Index 1: Meetings - Student',
     ),
     Text(
-      'Index 2: School',
+      'Index 2: More - Student',
+    ),
+  ];
+
+  static const List<Widget> _widgetTutorOptions = <Widget>[
+    HomeTutors(),
+    Text(
+      'Index 1: Meetings - Tutor',
+    ),
+    Text(
+      'Index 2: More - Tutor',
     ),
   ];
   @override
@@ -81,18 +93,44 @@ class HomePage extends StatelessWidget {
       );
       return Scaffold(
         appBar: AppBar(
-          title: Text("${role.name} - ${auth.user.email} - ${auth.user.id}"),
-          bottom: AppBar(
-            title: userInformationState.when(
-              data: (person) {
-                return Text("${person.nombre}");
-              },
-              loading: () => CircularProgressIndicator(),
-              error: (error, stackTrace) => Text(
-                "Sin datos asignados",
-                style: TextStyle(fontSize: 12),
+          title: Column(
+            children: [
+              Row(
+                children: [
+                  Text(
+                    "${role.name} - ${auth.user.email} - id:${auth.user.id}",
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ],
               ),
-            ),
+              userInformationState.when(
+                data: (person) {
+                  return Row(
+                    children: [
+                      Text(
+                        "${person.nombre}",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    ],
+                  );
+                },
+                loading: () => Container(
+                  width: 25,
+                  height: 25,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
+                ),
+                error: (error, stackTrace) => Row(
+                  children: [
+                    Text(
+                      "Sin datos asignados",
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           actions: [
             IconButton(
@@ -103,7 +141,9 @@ class HomePage extends StatelessWidget {
             )
           ],
         ),
-        body: _widgetOptions.elementAt(navIndex.state),
+        body: role.type == 'tutor'
+            ? _widgetTutorOptions.elementAt(navIndex.state)
+            : _widgetStudentOptions.elementAt(navIndex.state),
         bottomNavigationBar: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
@@ -127,111 +167,3 @@ class HomePage extends StatelessWidget {
     });
   }
 }
-
-class HomeStudent extends StatelessWidget {
-  const HomeStudent();
-  @override
-  Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 1,
-      crossAxisSpacing: 10,
-      padding: EdgeInsets.all(10),
-      // mainAxisSpacing: 15,
-      childAspectRatio: 6 / 3,
-      // childAspectRatio: 9.1 / 7, //-> ~1.3
-      children: [
-        Section(
-            title: "Materiales -Recursos",
-            imagePath: "assets/icons/materiales.png",
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => MyMaterialPage()),
-              );
-            }),
-        Section(
-          title: "Materias",
-          imagePath: "assets/icons/materiales.png",
-        ),
-        Section(
-          title: "Matricula",
-          imagePath: "assets/icons/materiales.png",
-        ),
-        Section(
-          title: "Pagos",
-          imagePath: "assets/icons/materiales.png",
-        ),
-        // Section(
-        //   title: "Materiales",
-        //   imagePath: "assets/icons/materiales.png",
-        // ),
-      ],
-    );
-  }
-}
-
-class Section extends StatelessWidget {
-  const Section(
-      {Key key, this.imagePath, this.title, this.description, this.onTap})
-      : super(key: key);
-
-  final String imagePath;
-  final String title;
-  final String description;
-  final VoidCallback onTap;
-
-  static const _height = 120.0;
-  @override
-  Widget build(BuildContext context) {
-    // final media = MediaQuery.of(context);
-    return Container(
-      // color: Colors.transparent,
-      // width: media.size.width * 0.20,
-      // height: _height,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 5),
-          child: Row(
-            children: [
-              Container(
-                margin: EdgeInsets.only(right: 10),
-                alignment: Alignment.topCenter,
-                child: Image.asset(
-                  imagePath,
-                  height: _height * 1,
-                  // fit: BoxFit.fitHeight,
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Expanded(
-                      child: Text(
-                        description ?? fakeDescription,
-                        overflow: TextOverflow.fade,
-                        // maxLines: 8,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-final fakeDescription =
-    "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
