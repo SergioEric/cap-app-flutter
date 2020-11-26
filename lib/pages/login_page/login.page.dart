@@ -1,31 +1,21 @@
 import 'package:cap_sahagun/blocs/login/login_cubit.dart';
-import 'package:cap_sahagun/models/auth/auth.model.dart';
-import 'package:cap_sahagun/providers/base.url.dart';
-import 'package:cap_sahagun/providers/login_provider/login.provider.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart' hide BuildContextX;
 import 'package:lol_colors_flutter/lol_colors_flutter.dart';
 import 'package:lol_colors_flutter/color_extension.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-
 import '../../global.providers.dart';
 import '../../providers/new.context.dart';
 
 // import '../../main.dart';
 
-final loginRepository = Provider<LoginRepository>(
-  (ref) => LoginRepository(
-    client: ref.watch(client),
-    read: ref.read,
-  ),
+final emailRegExp = RegExp(
+  r'^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$',
 );
 
 final loginCubit = Provider<LoginCubit>(
-  (ref) => LoginCubit(
-    repository: ref.read(loginRepository),
-  ),
+  (ref) => LoginCubit(repository: ref.read(loginRepository), read: ref.read),
 );
 
 class LoginPage extends StatelessWidget {
@@ -87,10 +77,6 @@ class LoginPage extends StatelessWidget {
 }
 
 class FormWidget extends StatelessWidget {
-  // const FormWidget({Key key, @required this.colors}) : super(key: key);
-
-  // final List<Color> colors;
-
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -110,10 +96,20 @@ class FormWidget extends StatelessWidget {
 
     return BlocConsumer<LoginCubit, LoginState>(
       listener: (context, state) {
+        final errorColor = LolColors.c1658_4;
         if (state is LoginError) {
           Scaffold.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.error.toString()),
+              backgroundColor: errorColor,
+              content: Row(
+                children: [
+                  Icon(Icons.warning_rounded),
+                  Text(
+                    state.error,
+                    style: TextStyle(color: errorColor[100]),
+                  ),
+                ],
+              ),
             ),
           );
         }
@@ -123,82 +119,144 @@ class FormWidget extends StatelessWidget {
           width: media.size.width,
           height: media.size.height * 0.45,
           padding: const EdgeInsets.symmetric(vertical: 20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(5),
-                width: media.size.width * 0.8,
-                child: TextFormField(
-                  style: textFieldHintStyle,
-                  decoration: InputDecoration(
-                    hintText: "email@domain.com",
-                    labelText: "Email",
-                    hintStyle: textFieldHintStyle,
-                    labelStyle: textFieldLabelStyle,
-                  ),
-                ),
-                decoration: BoxDecoration(
-                  color: color3,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.all(5),
-                width: media.size.width * 0.8,
-                margin: EdgeInsets.only(top: 14),
-                child: TextFormField(
-                  obscureText: true,
-                  style: textFieldHintStyle,
-                  decoration: InputDecoration(
-                    // hintText: "",
-                    labelText: "Contraseña",
-                    hintStyle: textFieldHintStyle,
-                    labelStyle: textFieldLabelStyle,
-                  ),
-                ),
-                decoration: BoxDecoration(
-                  color: color3,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-              ),
-              Column(
+          child: HookBuilder(
+            builder: (context) {
+              final emailState = useState<String>("");
+              final passwordState = useState<String>("");
+
+              final emailIsValid = useState<bool>(false);
+              final passwordIsValid = useState<bool>(false);
+
+              final emailError = useState<String>();
+              final passwordError = useState<String>();
+
+              useValueChanged(emailState.value, (_, oldResult) {
+                final isEmailValid = emailRegExp.hasMatch(emailState.value);
+                if (oldResult != isEmailValid) {
+                  // print(oldResult != isEmailValid);
+                  emailIsValid.value = isEmailValid;
+                  if (!isEmailValid) {
+                    emailError.value = "email incompleto";
+                  } else {
+                    emailError.value = null;
+                  }
+                }
+                return isEmailValid; // *oldResult
+              });
+
+              useValueChanged(passwordState.value, (_, oldResult) {
+                final passIsEmpty = passwordState.value.isEmpty;
+                if (passIsEmpty != oldResult) {
+                  passwordIsValid.value = !passIsEmpty;
+                  if (passIsEmpty) {
+                    passwordError.value = "contraseña vacía";
+                  } else {
+                    passwordError.value = null;
+                  }
+                }
+
+                return oldResult;
+              });
+
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  // login.onError != null ? Text("${login.onError}") : SizedBox(),
                   Container(
-                    width: 250,
-                    child: IgnorePointer(
-                      ignoring: state is LoginInProgress,
-                      child: TextButton(
-                        child: (state is LoginInProgress)
-                            ? Container(
-                                width: 25,
-                                height: 25,
-                                // padding: const EdgeInsets.all(8.0),
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text("CONTINUAR"),
-                        onPressed: () {
-                          // context.read(authProvider).state = true;
-                          context.read<LoginCubit>().getLogIn();
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: color1,
-                          primary: Colors.white,
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 15,
+                    padding: const EdgeInsets.all(5),
+                    width: media.size.width * 0.8,
+                    child: TextFormField(
+                      style: textFieldHintStyle,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        hintText: "email@domain.com",
+                        labelText: "Email",
+                        hintStyle: textFieldHintStyle,
+                        labelStyle: textFieldLabelStyle,
+                        errorText: emailError.value,
+                      ),
+                      onChanged: (value) {
+                        emailState.value = value;
+                      },
+                    ),
+                    decoration: BoxDecoration(
+                      color: color3,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    width: media.size.width * 0.8,
+                    margin: EdgeInsets.only(top: 14),
+                    child: TextFormField(
+                      obscureText: true,
+                      style: textFieldHintStyle,
+                      decoration: InputDecoration(
+                        // hintText: "",
+                        labelText: "Contraseña",
+                        hintStyle: textFieldHintStyle,
+                        labelStyle: textFieldLabelStyle,
+                        errorText: passwordError.value,
+                      ),
+                      onChanged: (value) {
+                        passwordState.value = value;
+                      },
+                    ),
+                    decoration: BoxDecoration(
+                      color: color3,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      // login.onError != null ? Text("${login.onError}") : SizedBox(),
+                      Container(
+                        width: 250,
+                        child: IgnorePointer(
+                          ignoring: state is LoginInProgress,
+                          child: TextButton(
+                            child: (state is LoginInProgress)
+                                ? Container(
+                                    width: 25,
+                                    height: 25,
+                                    // padding: const EdgeInsets.all(8.0),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Text("CONTINUAR"),
+                            onPressed: () {
+                              if (!passwordIsValid.value ||
+                                  !emailIsValid.value) {
+                                Scaffold.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: Colors.redAccent,
+                                    content: Text("Rellena los campos"),
+                                  ),
+                                );
+                                return;
+                              }
+                              context.read<LoginCubit>().getLogIn(
+                                    email: emailState.value,
+                                    password: passwordState.value,
+                                  );
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: color1,
+                              primary: Colors.white,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 30,
+                                vertical: 15,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
+                    ],
+                  )
+                  // Counter(),
                 ],
-              )
-              // Counter(),
-            ],
+              );
+            },
           ),
           decoration: BoxDecoration(
             color: color4,

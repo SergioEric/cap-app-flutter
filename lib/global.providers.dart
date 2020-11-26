@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'models/auth/auth.model.dart';
+import 'providers/login_provider/login.provider.dart';
 
 final client = Provider((_) => Dio());
 
@@ -18,5 +19,12 @@ final session = FutureProvider.autoDispose<Auth>((_) async {
 
   if (isEmpty) return null;
 
-  return box.values.first;
+  return box.get("session");
 });
+
+final loginRepository = Provider<LoginRepository>(
+  (ref) => LoginRepository(
+    client: ref.watch(client),
+    // read: ref.read,
+  ),
+);

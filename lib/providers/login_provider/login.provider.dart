@@ -1,73 +1,67 @@
-import 'package:cap_sahagun/models/auth/auth.model.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-
-import 'package:cap_sahagun/providers/base.url.dart';
+// import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:cap_sahagun/models/exceptions/exception.model.dart';
 import 'package:dio/dio.dart';
+import 'package:hive/hive.dart';
 import 'package:meta/meta.dart';
 
-import '../../global.providers.dart';
+import 'package:cap_sahagun/helpers/helpers.dart';
+import 'package:cap_sahagun/providers/base.url.dart';
+import 'package:cap_sahagun/models/auth/auth.model.dart';
+// import '../../global.providers.dart';
 
 class LoginRepository {
   LoginRepository({
-    Dio client,
-    Reader read,
-  })  :
-        // : assert(client != null && read != null),
-        _client = client,
-        _read = read;
+    @required Dio client,
+    // Reader read,
+  })  : assert(client != null),
+        _client = client;
+  // _read = read;
 
   final Dio _client;
-  final Reader _read;
+  // final Reader _read;
 
-  Future<Auth> getLogin(
-      {@required String email, @required String password}) async {
+  Future<Auth> getLogin({String email, String password}) async {
     try {
       final response = await _client.post(
         "$baseUrl/auth/local",
         data: {
-          "identifier": "test@gmail.co",
-          "password": "123456789",
+          "identifier": email,
+          "password": password,
         },
       );
 
       if (response.statusCode == 200) {
+        Auth auth = Auth.fromMap(response.data);
         print(response.data);
-        _read(authProvider).state = true;
-        return Auth.fromMap(response.data);
+        // _read(authProvider).state = true;
+        var box = Hive.box<Auth>("auth");
+        box.put("session", auth);
+
+        return auth;
       }
-      if (response.statusCode == 400) {
-        print(response.data);
-      }
+      print(response);
+      // if (response.statusCode == 400) {
+      //   print(response.data);
+      // }
     } on DioError catch (e) {
-      throw Exception(e.message);
-      // print(e.response);
+      // print(e.response.toString());
+      throw CleanException(
+        CleanExeptionModel.fromJson(e.response.toString())
+            .message
+            .first
+            .messages[0]
+            .message,
+      );
     } catch (e) {
-      throw Exception(e.message);
+      throw CleanException(e.message);
     }
 
     return null;
   }
+
+  Future<void> logOut() async {
+    var box = Hive.box<Auth>("auth");
+
+    await box.clear();
+  }
 }
-
-// class MyLoginNotifier extends StateNotifier<AsyncValue<Auth>> {
-//   final Dio _client;
-
-//   MyLoginNotifier(this._client) : super(const AsyncValue.loading()) {
-//     // _fetchData();
-//   }
-
-//   Future<void> fetchData(String email, String password) async {
-//     state = const AsyncValue.loading();
-//     // does the try/catch for us like previously
-//     state = await AsyncValue.guard(() async {
-//       final response = await _client.post(
-//         "$baseUrl/auth/local",
-//         data: {
-//           "identifier": "test@gmail.com",
-//           "password": "123456789",
-//         },
-//       );
-//       return Auth.fromJson(response.data);
-//     });
-//   }
-// }

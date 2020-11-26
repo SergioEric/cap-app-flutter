@@ -9,6 +9,9 @@ import 'package:lol_colors_flutter/lol_colors_flutter.dart';
 // import 'helpers/helpers.dart';
 import 'global.providers.dart';
 import 'models/auth/auth.model.dart';
+import 'models/role/role.model.dart';
+import 'models/user/user.model.dart';
+import 'pages/home_page/home.page.dart';
 import 'pages/login_page/login.page.dart';
 
 void main() async {
@@ -19,6 +22,8 @@ void main() async {
   await Hive.initFlutter();
 
   Hive.registerAdapter(AuthAdapter());
+  Hive.registerAdapter(RoleAdapter());
+  Hive.registerAdapter(UserAdapter());
 
   runApp(
     ProviderScope(
@@ -90,22 +95,6 @@ class SplashScreen extends StatelessWidget {
           context.read(authProvider).state = false;
           print("Splash $value");
         },
-      ),
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  static Route route() {
-    return MaterialPageRoute<void>(builder: (_) => HomePage());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Center(
-        child: Text("Home Page"),
       ),
     );
   }
